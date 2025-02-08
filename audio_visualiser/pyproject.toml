@@ -1,0 +1,68 @@
+[project]
+name = "audio_viz"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ipykernel>=6.29.5",
+    "nbformat>=5.10.4",
+    "pydub>=0.25.1",
+
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+  "pytest-env",
+  "pytest-xdist",
+  "ruff"
+]
+
+# uncomment when needed
+# [tool.uv.sources]
+# utils = {path = "../utils", editable = true}
+
+
+[tools.ruff]
+line-length = 100
+indent-width = 4
+
+[tools.ruff.lint]
+preview = true
+ignore = [
+  "E731", # no lambda
+]
+
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+docstring-code-format = true
+docstring-code-line-length = 30
+
+# respect magic trailing commas
+skip-magic-trailing-comma = false
+
+# auto detect appropriate line ending
+line-ending = "auto"
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+
+[tools.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+]
+addopts = [
+  "-vv"
+]
+env = [
+
+]
