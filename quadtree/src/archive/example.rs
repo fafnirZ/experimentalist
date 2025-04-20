@@ -1,3 +1,5 @@
+// https://github.com/gfx-rs/wgpu/tree/trunk/examples/standalone/02_hello_window
+// accessed on: 20/4/25
 use std::sync::Arc;
 
 use winit::{
