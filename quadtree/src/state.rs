@@ -34,11 +34,13 @@ impl State {
         let surface_format = cap.formats[0];
 
         // shader pipelines
-        let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/triangle.wgsl"));
+        let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/circle.wgsl"));
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[
+                    
+                ],
                 push_constant_ranges: &[],
             });
         
