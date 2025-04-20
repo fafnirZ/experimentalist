@@ -1,4 +1,6 @@
 pub mod window;
+pub mod example;
 fn main() {
-    window::run();
+    // window::run();
+    example::main();
 }
