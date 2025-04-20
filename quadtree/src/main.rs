@@ -1,5 +1,6 @@
-pub mod example;
+pub mod app;
+pub mod state;
 fn main() {
     // window::run();
-    example::main();
+    app::main();
 }
