@@ -134,8 +134,6 @@ impl ApplicationHandler for App {
                 .unwrap(),
         );
 
-        println!("{:?}", window);
-
         let state = pollster::block_on(State::new(window.clone()));
         self.state = Some(state);
 
