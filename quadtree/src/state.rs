@@ -1,6 +1,7 @@
 
-use std::sync::Arc;
+use std::{num::NonZero, sync::Arc};
 
+use wgpu::BindGroupLayoutDescriptor;
 use winit::window::Window;
 
 pub struct State {
@@ -33,57 +34,7 @@ impl State {
         let cap = surface.get_capabilities(&adapter);
         let surface_format = cap.formats[0];
 
-        // shader pipelines
-        let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/circle.wgsl"));
-        let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[
-                    
-                ],
-                push_constant_ranges: &[],
-            });
-        
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&render_pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: Some("vs_main"), // 1.
-                buffers: &[], // 2.
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-            },
-            fragment: Some(wgpu::FragmentState { // 3.
-                module: &shader,
-                entry_point: Some("fs_main"),
-                targets: &[Some(wgpu::ColorTargetState { // 4.
-                    format: surface_format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
-            }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList, // 1.
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw, // 2.
-                cull_mode: Some(wgpu::Face::Back),
-                // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-                polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLIP_CONTROL
-                unclipped_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
-                conservative: false,
-            },
-            depth_stencil: None, // 1.
-            multisample: wgpu::MultisampleState {
-                count: 1, // 2.
-                mask: !0, // 3.
-                alpha_to_coverage_enabled: false, // 4.
-            },
-            multiview: None, // 5.
-            cache: None, // 6.
-        });
+        let render_pipeline = init_shaders(&device, &surface_format);
     
         let state = State {
             window,
@@ -173,4 +124,86 @@ impl State {
         self.window.pre_present_notify();
         surface_texture.present();
     }
+}
+
+
+// ensure matches the one in wgsl
+#[repr(C)] // Ensure correct memory layout
+#[derive(Debug, Copy, Clone)] // Add necessary derives
+pub struct Uniforms {
+    pub center: [f32; 2],
+    pub radius: f32,
+    pub color: [f32; 4],
+}
+
+fn init_shaders(device: &wgpu::Device, surface_format: &wgpu::TextureFormat) -> wgpu::RenderPipeline {
+    let uniform_size = std::mem::size_of::<Uniforms>(); // Get the size of your Uniforms struct
+
+    // shader pipelines
+    let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/circle.wgsl"));
+    let render_pipeline_layout =
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("Render Pipeline Layout"),
+            bind_group_layouts: &[
+                &device.create_bind_group_layout(&BindGroupLayoutDescriptor{
+                    label: Some("uniform_bind_group_layout"),
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry{
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Buffer { 
+                                ty: wgpu::BufferBindingType::Uniform, 
+                                has_dynamic_offset: false,
+                                min_binding_size: Some(NonZero::new(uniform_size as u64).unwrap()),
+                            },
+                            count: None,
+                        },
+                    ]
+                })
+            ],
+            push_constant_ranges: &[],
+        });
+    
+    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        label: Some("Render Pipeline"),
+        layout: Some(&render_pipeline_layout),
+        vertex: wgpu::VertexState {
+            module: &shader,
+            entry_point: Some("vs_main"), // 1.
+            buffers: &[], // 2.
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+        },
+        fragment: Some(wgpu::FragmentState { // 3.
+            module: &shader,
+            entry_point: Some("fs_main"),
+            targets: &[Some(wgpu::ColorTargetState { // 4.
+                format: *surface_format,
+                blend: Some(wgpu::BlendState::REPLACE),
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
+        }),
+        primitive: wgpu::PrimitiveState {
+            topology: wgpu::PrimitiveTopology::TriangleList, // 1.
+            strip_index_format: None,
+            front_face: wgpu::FrontFace::Ccw, // 2.
+            cull_mode: Some(wgpu::Face::Back),
+            // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
+            polygon_mode: wgpu::PolygonMode::Fill,
+            // Requires Features::DEPTH_CLIP_CONTROL
+            unclipped_depth: false,
+            // Requires Features::CONSERVATIVE_RASTERIZATION
+            conservative: false,
+        },
+        depth_stencil: None, // 1.
+        multisample: wgpu::MultisampleState {
+            count: 1, // 2.
+            mask: !0, // 3.
+            alpha_to_coverage_enabled: false, // 4.
+        },
+        multiview: None, // 5.
+        cache: None, // 6.
+    });
+
+    return render_pipeline;
 }
