@@ -13,16 +13,16 @@ pub struct CircleInstance {
 pub fn generate_random_circles(
     num_circles: u32,
 ) -> Vec<CircleInstance> {
-    let MAX_WIDTH=100.0;
-    let MAX_HEIGHT=100.0;
+    let max_width: f32 =100.0;
+    let max_height: f32 =100.0;
 
     let mut rng = rng();
     
     return (0..num_circles)
             .map(|_| CircleInstance{
                 position: [
-                    rng.random_range(0.0..MAX_HEIGHT),
-                    rng.random_range(0.0..MAX_WIDTH),
+                    rng.random_range(0.0..max_height),
+                    rng.random_range(0.0..max_width),
                 ],
                 radius: 1.0,
                 color: [255.0,255.0,255.0,1.0],

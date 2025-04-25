@@ -140,7 +140,7 @@ fn init_shaders(device: &wgpu::Device, surface_format: &wgpu::TextureFormat) -> 
     let uniform_size = std::mem::size_of::<Uniforms>(); // Get the size of your Uniforms struct
 
     // shader pipelines
-    let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/circle.wgsl"));
+    let shader = device.create_shader_module(wgpu::include_wgsl!("shaders/triangle.wgsl"));
     let render_pipeline_layout =
         device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
@@ -183,26 +183,6 @@ fn init_shaders(device: &wgpu::Device, surface_format: &wgpu::TextureFormat) -> 
             })],
             compilation_options: wgpu::PipelineCompilationOptions::default(),
         }),
-        primitive: wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList, // 1.
-            strip_index_format: None,
-            front_face: wgpu::FrontFace::Ccw, // 2.
-            cull_mode: Some(wgpu::Face::Back),
-            // Setting this to anything other than Fill requires Features::NON_FILL_POLYGON_MODE
-            polygon_mode: wgpu::PolygonMode::Fill,
-            // Requires Features::DEPTH_CLIP_CONTROL
-            unclipped_depth: false,
-            // Requires Features::CONSERVATIVE_RASTERIZATION
-            conservative: false,
-        },
-        depth_stencil: None, // 1.
-        multisample: wgpu::MultisampleState {
-            count: 1, // 2.
-            mask: !0, // 3.
-            alpha_to_coverage_enabled: false, // 4.
-        },
-        multiview: None, // 5.
-        cache: None, // 6.
     });
 
     return render_pipeline;
