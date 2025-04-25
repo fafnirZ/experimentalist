@@ -150,7 +150,7 @@ impl State {
         let vertices = [
             Vertex::new(0.0, 0.5),
             Vertex::new(-0.5, -0.5),
-            Vertex::new(0.5, -0.5),
+            Vertex::new(0.5, -1.0),
         ];
         return vertices;
     }
@@ -208,7 +208,7 @@ fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> Render
         vertex: VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
-            buffers: &[],
+            buffers: &[Vertex::layout()],
             compilation_options: PipelineCompilationOptions::default(),
         },
         primitive: PrimitiveState::default(),
