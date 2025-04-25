@@ -1,3 +1,5 @@
+
+// replace state.rs with this 
 // influenced by: https://github.com/junglie85/wgpu-samples/blob/main/samples/hello-triangle/main.rs
 // influenced by: https://github.com/gfx-rs/wgpu/blob/trunk/examples/standalone/02_hello_window/src/main.rs
 
@@ -12,6 +14,7 @@ use wgpu::{
     VertexBufferLayout, VertexFormat, VertexState, VertexStepMode, include_wgsl,
 };
 use winit::window::Window;
+
 
 pub struct State {
     window: Arc<Window>,
