@@ -190,10 +190,10 @@ impl State {
     fn init_vertices() -> [Vertex;4] {
         // create vertices
         let vertices = [
-            Vertex::new(0.0, 0.5),
+            Vertex::new(0.5, 0.5),
             Vertex::new(-0.5, -0.5),
-            Vertex::new(0.5, -1.0),
-            Vertex::new(-1.0, -1.0),
+            Vertex::new(0.5, -0.5),
+            Vertex::new(-0.5, 0.5),
         ];
         return vertices;
     }
