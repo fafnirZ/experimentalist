@@ -65,8 +65,7 @@ impl State {
         let cap = surface.get_capabilities(&adapter);
         let surface_format = cap.formats[0];
 
-        let render_pipeline = init_shaders(&device, &surface_format);
-
+        let render_pipeline = State::init_shaders(&device, &surface_format);
         let vertices = State::init_vertices();
         let vbo = State::init_vertex_buffers(
             &device,
@@ -137,6 +136,7 @@ impl State {
         // Renders a GREEN screen
         let mut encoder = self.device.create_command_encoder(&Default::default());
 
+        // creates renderpass and draws
         self.render_shader(&texture_view, &mut encoder);
 
         // Submit the command in the queue to execute
@@ -144,6 +144,48 @@ impl State {
         self.window.pre_present_notify();
         surface_texture.present();
     }
+    ////////////////////
+    // custom helpers //
+    ////////////////////
+    
+    // needs to be created during initialisation of state (init fn)
+    fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> RenderPipeline {
+        let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[],
+            push_constant_ranges: &[],
+        });
+
+        let shader = device.create_shader_module(include_wgsl!("shaders/line.wgsl"));
+        let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
+            label: None,
+            layout: Some(&render_pipeline_layout),
+            vertex: VertexState {
+                module: &shader,
+                entry_point: Some("vs_main"),
+                buffers: &[Vertex::layout()],
+                compilation_options: PipelineCompilationOptions::default(),
+            },
+            primitive: PrimitiveState::default(),
+            depth_stencil: None,
+            fragment: Some(FragmentState {
+                module: &shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    // 4.
+                    format: *surface_format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            }),
+            multisample: MultisampleState::default(),
+            cache: None,
+            multiview: None,
+        });
+        return render_pipeline;
+    }
+
 
     fn init_vertices() -> [Vertex; 3] {
         // create vertices
@@ -191,42 +233,4 @@ impl State {
 
         drop(renderpass);
     }
-}
-
-// needs to be created during initialisation of state (init fn)
-fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> RenderPipeline {
-    let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-        label: None,
-        bind_group_layouts: &[],
-        push_constant_ranges: &[],
-    });
-
-    let shader = device.create_shader_module(include_wgsl!("shaders/line.wgsl"));
-    let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
-        label: None,
-        layout: Some(&render_pipeline_layout),
-        vertex: VertexState {
-            module: &shader,
-            entry_point: Some("vs_main"),
-            buffers: &[Vertex::layout()],
-            compilation_options: PipelineCompilationOptions::default(),
-        },
-        primitive: PrimitiveState::default(),
-        depth_stencil: None,
-        fragment: Some(FragmentState {
-            module: &shader,
-            entry_point: Some("fs_main"),
-            targets: &[Some(wgpu::ColorTargetState {
-                // 4.
-                format: *surface_format,
-                blend: Some(wgpu::BlendState::REPLACE),
-                write_mask: wgpu::ColorWrites::ALL,
-            })],
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
-        }),
-        multisample: MultisampleState::default(),
-        cache: None,
-        multiview: None,
-    });
-    return render_pipeline;
 }
