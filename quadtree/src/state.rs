@@ -1,7 +1,7 @@
 
 use std::{num::NonZero, sync::Arc};
 
-use wgpu::{include_wgsl, BindGroupLayoutDescriptor, FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions, PipelineLayoutDescriptor, PrimitiveState, RenderPipeline, RenderPipelineDescriptor, TextureFormat, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState, VertexStepMode};
+use wgpu::{include_wgsl, BindGroupLayoutDescriptor, Buffer, BufferDescriptor, BufferUsages, CommandEncoder, Device, FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions, PipelineLayoutDescriptor, PrimitiveState, RenderPass, RenderPipeline, RenderPipelineDescriptor, SurfaceTexture, Texture, TextureFormat, TextureView, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState, VertexStepMode};
 use winit::window::Window;
 
 pub struct State {
@@ -121,6 +121,47 @@ impl State {
 
         // Renders a GREEN screen
         let mut encoder = self.device.create_command_encoder(&Default::default());
+
+        self.render_shader(&texture_view, &mut encoder);
+
+        // Submit the command in the queue to execute
+        self.queue.submit([encoder.finish()]);
+        self.window.pre_present_notify();
+        surface_texture.present();
+    }
+
+
+    fn init_vertices(&mut self) -> [Vertex;3] {
+        // create vertices
+        let vertices = [
+            Vertex::new(0.0, 0.5),
+            Vertex::new(-0.5, -0.5),
+            Vertex::new(0.5, -0.5),
+        ];
+        return vertices;
+    }
+    
+    fn init_vertex_buffers(
+        &mut self,
+        device: &Device
+    ) -> Buffer {
+    
+        // create buffers
+        let vbo = device.create_buffer(&BufferDescriptor {
+            label: None,
+            size: size_of::<Vertex>() as u64 * 3,
+            usage: BufferUsages::VERTEX | BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+    
+        return vbo
+    }
+    
+    fn render_shader(
+        &mut self,
+        texture_view: &TextureView, 
+        encoder: &mut CommandEncoder
+    ){
         // Create the renderpass which will clear the screen.
         let mut renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
@@ -136,18 +177,12 @@ impl State {
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-
+    
         // If you wanted to call any drawing commands, they would go here.
         renderpass.set_pipeline(&self.render_pipeline);
-        // renderpass.draw(0..3, 0..1);
-
-        // End the renderpass.
+        renderpass.draw(0..3, 0..1);
+    
         drop(renderpass);
-
-        // Submit the command in the queue to execute
-        self.queue.submit([encoder.finish()]);
-        self.window.pre_present_notify();
-        surface_texture.present();
     }
 }
 
@@ -188,3 +223,4 @@ fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> Render
     });
     return render_pipeline;
 }
+
