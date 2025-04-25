@@ -1,3 +1,4 @@
+use crate::state::State;
 use std::sync::Arc;
 use winit::{
     application::ApplicationHandler,
@@ -5,7 +6,6 @@ use winit::{
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
     window::{Window, WindowId},
 };
-use crate::state::State;
 
 #[derive(Default)]
 pub struct App {

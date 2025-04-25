@@ -1,7 +1,15 @@
+// influenced by: https://github.com/junglie85/wgpu-samples/blob/main/samples/hello-triangle/main.rs
+// influenced by: https://github.com/gfx-rs/wgpu/blob/trunk/examples/standalone/02_hello_window/src/main.rs
 
 use std::{num::NonZero, sync::Arc};
 
-use wgpu::{include_wgsl, BindGroupLayoutDescriptor, Buffer, BufferDescriptor, BufferUsages, CommandEncoder, Device, FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions, PipelineLayoutDescriptor, PrimitiveState, RenderPass, RenderPipeline, RenderPipelineDescriptor, SurfaceTexture, Texture, TextureFormat, TextureView, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState, VertexStepMode};
+use wgpu::{
+    BindGroupLayoutDescriptor, Buffer, BufferDescriptor, BufferUsages, CommandEncoder, Device,
+    FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions,
+    PipelineLayoutDescriptor, PrimitiveState, RenderPass, RenderPipeline, RenderPipelineDescriptor,
+    SurfaceTexture, Texture, TextureFormat, TextureView, VertexAttribute, VertexBufferLayout,
+    VertexFormat, VertexState, VertexStepMode, include_wgsl,
+};
 use winit::window::Window;
 
 pub struct State {
@@ -15,7 +23,6 @@ pub struct State {
     // NEW!
     render_pipeline: RenderPipeline,
 }
-
 
 #[derive(Debug, Default, Clone, Copy)]
 #[repr(C)]
@@ -60,7 +67,7 @@ impl State {
         let surface_format = cap.formats[0];
 
         let render_pipeline = init_shaders(&device, &surface_format);
-    
+
         let state = State {
             window,
             device,
@@ -130,8 +137,7 @@ impl State {
         surface_texture.present();
     }
 
-
-    fn init_vertices(&mut self) -> [Vertex;3] {
+    fn init_vertices(&mut self) -> [Vertex; 3] {
         // create vertices
         let vertices = [
             Vertex::new(0.0, 0.5),
@@ -140,12 +146,8 @@ impl State {
         ];
         return vertices;
     }
-    
-    fn init_vertex_buffers(
-        &mut self,
-        device: &Device
-    ) -> Buffer {
-    
+
+    fn init_vertex_buffers(&mut self, device: &Device) -> Buffer {
         // create buffers
         let vbo = device.create_buffer(&BufferDescriptor {
             label: None,
@@ -153,15 +155,11 @@ impl State {
             usage: BufferUsages::VERTEX | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-    
-        return vbo
+
+        return vbo;
     }
-    
-    fn render_shader(
-        &mut self,
-        texture_view: &TextureView, 
-        encoder: &mut CommandEncoder
-    ){
+
+    fn render_shader(&mut self, texture_view: &TextureView, encoder: &mut CommandEncoder) {
         // Create the renderpass which will clear the screen.
         let mut renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
@@ -177,40 +175,40 @@ impl State {
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-    
+
         // If you wanted to call any drawing commands, they would go here.
         renderpass.set_pipeline(&self.render_pipeline);
         renderpass.draw(0..3, 0..1);
-    
+
         drop(renderpass);
     }
 }
 
-
 // needs to be created during initialisation of state (init fn)
 fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> RenderPipeline {
-    let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor{
+    let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: None,
         bind_group_layouts: &[],
         push_constant_ranges: &[],
-    }); 
+    });
 
     let shader = device.create_shader_module(include_wgsl!("shaders/line.wgsl"));
-    let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor{
+    let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
         label: None,
         layout: Some(&render_pipeline_layout),
-        vertex: VertexState{
+        vertex: VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
-            buffers: &[], 
+            buffers: &[],
             compilation_options: PipelineCompilationOptions::default(),
         },
         primitive: PrimitiveState::default(),
         depth_stencil: None,
-        fragment: Some(FragmentState{
+        fragment: Some(FragmentState {
             module: &shader,
             entry_point: Some("fs_main"),
-            targets: &[Some(wgpu::ColorTargetState { // 4.
+            targets: &[Some(wgpu::ColorTargetState {
+                // 4.
                 format: *surface_format,
                 blend: Some(wgpu::BlendState::REPLACE),
                 write_mask: wgpu::ColorWrites::ALL,
@@ -223,4 +221,3 @@ fn init_shaders(device: &wgpu::Device, surface_format: &TextureFormat) -> Render
     });
     return render_pipeline;
 }
-

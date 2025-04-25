@@ -4,5 +4,3 @@ pub mod state;
 fn main() {
     app::main();
 }
-
-
