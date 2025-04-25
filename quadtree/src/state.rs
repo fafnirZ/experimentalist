@@ -3,12 +3,9 @@
 
 use std::{num::NonZero, sync::Arc};
 
+use bytemuck::{cast_slice, Pod, Zeroable};
 use wgpu::{
-    BindGroupLayoutDescriptor, Buffer, BufferDescriptor, BufferUsages, CommandEncoder, Device,
-    FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions,
-    PipelineLayoutDescriptor, PrimitiveState, RenderPass, RenderPipeline, RenderPipelineDescriptor,
-    SurfaceTexture, Texture, TextureFormat, TextureView, VertexAttribute, VertexBufferLayout,
-    VertexFormat, VertexState, VertexStepMode, include_wgsl,
+    include_wgsl, BindGroupLayoutDescriptor, Buffer, BufferDescriptor, BufferUsages, CommandEncoder, Device, FragmentState, MultisampleState, PipelineCache, PipelineCompilationOptions, PipelineLayoutDescriptor, PrimitiveState, Queue, RenderPass, RenderPipeline, RenderPipelineDescriptor, SurfaceTexture, Texture, TextureFormat, TextureView, VertexAttribute, VertexBufferLayout, VertexFormat, VertexState, VertexStepMode
 };
 use winit::window::Window;
 
@@ -22,9 +19,11 @@ pub struct State {
 
     // NEW!
     render_pipeline: RenderPipeline,
+    vertices: Box<[Vertex]>,
+    vbo: Buffer,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 struct Vertex {
     position: [f32; 2],
@@ -68,15 +67,24 @@ impl State {
 
         let render_pipeline = init_shaders(&device, &surface_format);
 
-        let state = State {
+        let vertices = State::init_vertices();
+        let vbo = State::init_vertex_buffers(
+            &device,
+            &queue,
+            &vertices.to_vec(),
+        );
+
+        let state = State{
             window,
             device,
             queue,
             size,
             surface,
             surface_format,
-
+            // new
             render_pipeline,
+            vbo,
+            vertices: Box::new(vertices),
         };
 
         // Configure surface for the first time
@@ -137,7 +145,7 @@ impl State {
         surface_texture.present();
     }
 
-    fn init_vertices(&mut self) -> [Vertex; 3] {
+    fn init_vertices() -> [Vertex; 3] {
         // create vertices
         let vertices = [
             Vertex::new(0.0, 0.5),
@@ -147,7 +155,7 @@ impl State {
         return vertices;
     }
 
-    fn init_vertex_buffers(&mut self, device: &Device) -> Buffer {
+    fn init_vertex_buffers(device: &Device, queue: &Queue, vertices: &[Vertex]) -> Buffer {
         // create buffers
         let vbo = device.create_buffer(&BufferDescriptor {
             label: None,
@@ -155,7 +163,7 @@ impl State {
             usage: BufferUsages::VERTEX | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-
+        queue.write_buffer(&vbo, 0, cast_slice(vertices));
         return vbo;
     }
 
@@ -178,7 +186,8 @@ impl State {
 
         // If you wanted to call any drawing commands, they would go here.
         renderpass.set_pipeline(&self.render_pipeline);
-        renderpass.draw(0..3, 0..1);
+        renderpass.set_vertex_buffer(0, self.vbo.slice(..));
+        renderpass.draw(0..self.vertices.len() as u32, 0..1);
 
         drop(renderpass);
     }
