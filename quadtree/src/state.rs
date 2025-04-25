@@ -187,12 +187,13 @@ impl State {
     }
 
 
-    fn init_vertices() -> [Vertex; 3] {
+    fn init_vertices() -> [Vertex;4] {
         // create vertices
         let vertices = [
             Vertex::new(0.0, 0.5),
             Vertex::new(-0.5, -0.5),
             Vertex::new(0.5, -1.0),
+            Vertex::new(-1.0, -1.0),
         ];
         return vertices;
     }
@@ -201,7 +202,7 @@ impl State {
         // create buffers
         let vbo = device.create_buffer(&BufferDescriptor {
             label: None,
-            size: size_of::<Vertex>() as u64 * 3,
+            size: size_of::<Vertex>() as u64 * vertices.len() as u64,
             usage: BufferUsages::VERTEX | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
